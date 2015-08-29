@@ -9,6 +9,7 @@ $(document).ready(function() {
         return;
       } else {
         result.me().done(function (response) {
+          // Use the ID to get the movies
           facebookID = response.id;
           var url = 'https://graph.facebook.com/v2.3/' + facebookID + '/movies?access_token=' + accessToken
           console.log(response);
@@ -26,10 +27,6 @@ $(document).ready(function() {
             //handle error with err
         });
       }
-
-      // Use the ID to get the movies
-
-
     });
   });
 });
