@@ -20,7 +20,9 @@ $(document).ready(function() {
           facebookID = response.id;
           var userUrl = 'https://graph.facebook.com/v2.3/' + facebookID + '/movies?access_token=' +
                          accessToken
-          var likedMovies
+          var likedMovies;
+          var imdbMovieRatings = [];
+          var rottenTomatoesMovieRatings = [];
           changeButton();
 
           $.ajax({
@@ -44,13 +46,21 @@ $(document).ready(function() {
                               console.log(data);
                               releaseDate = data.release_date.substring(data.release_date.length - 4);
                               console.log(movieTitle + ' ' + releaseDate);
+                            },
+                            complete: function() {
+                              var movieSearchUrl = 'http://www.omdbapi.com/?t=' + movieTitle + '&y=' +
+                                                    releaseDate + '&type=movie&tomatoes=true&plot=short&r=json'
+                              $.getJSON(movieSearchUrl, function(data) {
+                                var imdbRating = data.imdbRating;
+                                imdbMovieRatings.push(imdbRating);
+                                var rottenTomatoesRating = data.tomatoMeter;
+                                rottenTomatoesMovieRatings.push(rottenTomatoesRating);
+                                console.log( movieTitle + ' IMDB: ' + imdbRating + ' RT: ' +
+                                             rottenTomatoesRating + '%'  );
+                              })
                             }
                           })
                         });
-                        // loop through each movie
-                        // for (var i=0; i < likedMovies.length; i += 1) {
-                        //   console.log(movieTitle);
-                        // }
                       }
             });
         })
