@@ -3,12 +3,21 @@ $(document).ready(function() {
   var usersFacebookID;
   var usersFacebookPicture;
   var usersName;
+  var rank;
   var usersFacebookProfileUrl
   var likedMovies;
   var numberOfLikedMovies;
   var requestCounter = 0;
   var imdbRatingResultsArray = [];
   var rottenTomatoesRatingResultsArray = [];
+
+  var rankCalculate = function(rankArray) {
+    if (rankArray == undefined) {
+      return '<div class="share">Share to see your rank!</div>'
+    } else {
+      // insert code to find where in the ranking array the user falls
+    }
+  };
 
   var loadingResultsButton = function() {
     $('#button').html('')
@@ -23,7 +32,7 @@ $(document).ready(function() {
 
   // takes the movie information and returns a list item with the movie information
   var renderResults = function () {
-    var html = '<table width="100%"><tbody><tr><td>Rank</td><td rowspan="2"><img src="' + usersFacebookPicture + '" class="profile-img" /></td><td rowspan="2">' + usersName + '</td><td>IMDB Avg</td><td>Rotten Tomatoes Avg</td></tr><tr><td>&nbsp;</td><td>' + averageRating(imdbRatingResultsArray) + '</td><td>' + averageRating(rottenTomatoesRatingResultsArray) + '%</td></tr></tbody></table>'
+    var html = '<tr><td><div class="rank-box">' + rankCalculate(rank) + '</div></td><td><img src="' + usersFacebookPicture + '" class="profile-img" /></td><td class="name">' + usersName + '</td><td class="rating-title"><img src="http://gallowmere.com/wp-content/uploads/2012/06/imdb-logo.png" class="imdb-logo" /><div class="rating-result">' + averageRating(imdbRatingResultsArray) + '</div></td><td class="rating-title"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/dd/Rt-logo.svg/300px-Rt-logo.svg.png" class="rt-logo" /><div class="rating-result">' + averageRating(rottenTomatoesRatingResultsArray) + '%</div></td></tr>'
     $('#results').html(html);
   };
 
@@ -36,7 +45,9 @@ $(document).ready(function() {
       for (var i = 0; i < numberOfRatings; i += 1) {
           sum += parseFloat(arrayOfMovieRatings[i]);
       }
-      average = (sum/numberOfRatings).toFixed(2);
+      average = +(sum/numberOfRatings).toFixed(2);
+    } else {
+      alert('Your results could not be calculated becuase no rating results were received. Please try again later.')
     }
     return average
   };
@@ -85,7 +96,6 @@ $(document).ready(function() {
                                 }
                               },
                               complete: function(data) {
-                                console.log(movieTitle + " " + releaseDate);
                                 if (data.release_date != undefined) {
                                   // with the release year, search the OMDB database to get ratings info
                                   var movieSearchUrl = 'http://www.omdbapi.com/?t=' + movieTitle + '&y=' +

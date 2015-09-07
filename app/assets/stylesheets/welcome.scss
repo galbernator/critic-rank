@@ -12,3 +12,71 @@
     from { -webkit-transform: rotate(0deg); }
     to { -webkit-transform: rotate(360deg); }
 }
+
+#button {
+  margin: 30px 0;
+  min-width: 360px;
+}
+
+.share {
+  font-size: .65em;
+  color: #f00;
+  max-width: 85px;
+}
+
+.center {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.results-table {
+  margin: 30px 0px;
+}
+
+.profile-img {
+  width: 88%;
+  height: auto;
+  max-width: 90px;
+  min-width: 45px;
+  margin: 8px;
+  border: 2px solid #999;
+}
+
+.rank-box {
+  padding: 8px 8px;
+  margin: 5px 10px;
+  font-size: 1.6em;
+  min-width: 45px;
+  text-align: center;
+}
+
+.name {
+  font-weight: bold;
+  font-size: 1.35em;
+  padding: 0px 15px;
+  // line-height: 2em;
+}
+
+.rating-title {
+  padding: 0px 15px;
+}
+
+.result-row {
+  width: 100%;
+  text-align: center;
+}
+
+.rating-result {
+  font-size: 1.8em;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.imdb-logo {
+  max-height: 30px;
+}
+
+.rt-logo {
+  max-height: 30px;
+}
