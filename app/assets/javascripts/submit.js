@@ -98,10 +98,10 @@ $(document).ready(function() {
                               complete: function(data) {
                                 if (data.release_date != undefined) {
                                   // with the release year, search the OMDB database to get ratings info
-                                  var movieSearchUrl = 'http://www.omdbapi.com/?t=' + movieTitle + '&y=' +
+                                  var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle + '&y=' +
                                                         releaseDate + '&type=movie&tomatoes=true&plot=short&r=json'
                                 } else {
-                                  var movieSearchUrl = 'http://www.omdbapi.com/?t=' + movieTitle +
+                                  var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle +
                                                         '&type=movie&tomatoes=true&plot=short&r=json'
                                 }
                                 $.ajax({
