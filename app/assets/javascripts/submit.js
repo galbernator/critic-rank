@@ -1,8 +1,12 @@
 $(document).ready(function() {
 
-  var facebookID;
+  var usersFacebookID;
+  var usersFacebookPicture;
+  var usersName;
+  var usersFacebookProfileUrl
   var likedMovies;
-  var requestCounter = 0
+  var numberOfLikedMovies;
+  var requestCounter = 0;
   var imdbRatingResultsArray = [];
   var rottenTomatoesRatingResultsArray = [];
 
@@ -19,8 +23,8 @@ $(document).ready(function() {
 
   // takes the movie information and returns a list item with the movie information
   var renderResults = function () {
-    var html = '<li>Average IMDB Rating: ' + averageRating(imdbRatingResultsArray) + '  Average Rotten Tomatoes Rating: ' + averageRating(rottenTomatoesRatingResultsArray) + '%';
-    $('#results ul').append(html);
+    var html = '<table width="100%"><tbody><tr><td>Rank</td><td rowspan="2"><img src="' + usersFacebookPicture + '" class="profile-img" /></td><td rowspan="2">' + usersName + '</td><td>IMDB Avg</td><td>Rotten Tomatoes Avg</td></tr><tr><td>&nbsp;</td><td>' + averageRating(imdbRatingResultsArray) + '</td><td>' + averageRating(rottenTomatoesRatingResultsArray) + '%</td></tr></tbody></table>'
+    $('#results').html(html);
   };
 
   // averages the ratings of the IMDB results in the imdbRatingResultsArray
@@ -32,7 +36,7 @@ $(document).ready(function() {
       for (var i = 0; i < numberOfRatings; i += 1) {
           sum += parseFloat(arrayOfMovieRatings[i]);
       }
-      average = sum/numberOfRatings
+      average = (sum/numberOfRatings).toFixed(2);
     }
     return average
   };
@@ -47,16 +51,21 @@ $(document).ready(function() {
       } else {
         loadingResultsButton();
         result.me().done(function (response) {
+          // save the user's profile picture, name and profile url
+          usersFacebookPicture = response.avatar;
+          usersName = response.name;
+          usersFacebookProfileUrl = response.url
           // Use the ID to get the movies
-          facebookID = response.id;
-          var userUrl = 'https://graph.facebook.com/v2.3/' + facebookID + '/movies?access_token=' +
+          usersFacebookID = response.id;
+          var userUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/movies?access_token=' +
                          accessToken
 
           $.ajax({
             url: userUrl,
             dataType: 'json',
             success: function(data) {
-                      likedMovies = data.data
+                      likedMovies = data.data;
+                      numberOfLikedMovies = likedMovies.length;
                     },
             complete: function() {
                           // loop through each movie in the likedMovies list
@@ -71,12 +80,20 @@ $(document).ready(function() {
                               url: movieUrl,
                               dataType: 'json',
                               success: function(data) {
-                                releaseDate = data.release_date.substring(data.release_date.length - 4);
+                                if (data.release_date != undefined) {
+                                  releaseDate = data.release_date.substring(data.release_date.length - 4);
+                                }
                               },
-                              complete: function() {
-                                // with the release year, search the OMDB database to get ratings info
-                                var movieSearchUrl = 'http://www.omdbapi.com/?t=' + movieTitle + '&y=' +
-                                                      releaseDate + '&type=movie&tomatoes=true&plot=short&r=json'
+                              complete: function(data) {
+                                console.log(movieTitle + " " + releaseDate);
+                                if (data.release_date != undefined) {
+                                  // with the release year, search the OMDB database to get ratings info
+                                  var movieSearchUrl = 'http://www.omdbapi.com/?t=' + movieTitle + '&y=' +
+                                                        releaseDate + '&type=movie&tomatoes=true&plot=short&r=json'
+                                } else {
+                                  var movieSearchUrl = 'http://www.omdbapi.com/?t=' + movieTitle +
+                                                        '&type=movie&tomatoes=true&plot=short&r=json'
+                                }
                                 $.ajax({
                                   url: movieSearchUrl,
                                   dataType: 'json',
@@ -84,12 +101,20 @@ $(document).ready(function() {
                                     requestCounter += 1;
                                     var imdbRating = data.imdbRating;
                                     var rottenTomatoesRating = data.tomatoMeter;
-                                    imdbRatingResultsArray.push(imdbRating);
-                                    rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
+                                    if (imdbRating != undefined) {
+                                      imdbRatingResultsArray.push(imdbRating);
+                                    }
+                                    if (rottenTomatoesRating != undefined) {
+                                      rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
+                                    }
+                                    console.log(movieTitle + ': IMDB-' + imdbRating + ' RT-' + rottenTomatoesRating);
+                                  },
+                                  error: function() {
+                                    numberOfLikedMovies -= 1;
                                   },
                                   complete: function() {
                                     // when all of the requests have completed, render results on page by calling renderResults
-                                    if (requestCounter === likedMovies.length) {
+                                    if (requestCounter === numberOfLikedMovies) {
                                       changeButton();
                                       renderResults();
                                     }
