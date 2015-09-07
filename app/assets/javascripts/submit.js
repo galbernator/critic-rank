@@ -6,10 +6,15 @@ $(document).ready(function() {
   var imdbRatingResultsArray = [];
   var rottenTomatoesRatingResultsArray = [];
 
+  var loadingResultsButton = function() {
+    $('#button').html('')
+    $('#button').html('<button class="btn btn-lg btn-info">Calculating Your Results <span class="glyphicon glyphicon-refresh spinning"></span></button>')
+  };
+
   // changes the button from 'find out' to 'share results'
   var changeButton = function() {
     $('#button').html('')
-    $('#button').html('<button id="share-it" class="btn btn-lg btn-warning">Share Your Rating</button>')
+    $('#button').html('<button id="share-it" class="btn btn-lg btn-success">Share Your Rating</button>')
   };
 
   // takes the movie information and returns a list item with the movie information
@@ -40,12 +45,12 @@ $(document).ready(function() {
         alert(error); // do something with error
         return;
       } else {
+        loadingResultsButton();
         result.me().done(function (response) {
           // Use the ID to get the movies
           facebookID = response.id;
           var userUrl = 'https://graph.facebook.com/v2.3/' + facebookID + '/movies?access_token=' +
                          accessToken
-          changeButton();
 
           $.ajax({
             url: userUrl,
@@ -54,7 +59,6 @@ $(document).ready(function() {
                       likedMovies = data.data
                     },
             complete: function() {
-                          console.log(likedMovies.length);
                           // loop through each movie in the likedMovies list
                           $.each(likedMovies, function(i, movie) {
                             var movieID = movie.id;
@@ -80,28 +84,17 @@ $(document).ready(function() {
                                     requestCounter += 1;
                                     var imdbRating = data.imdbRating;
                                     var rottenTomatoesRating = data.tomatoMeter;
-                                    console.log( movieTitle + ' IMDB: ' + imdbRating + ' RT: ' +
-                                                 rottenTomatoesRating + '%'  );
                                     imdbRatingResultsArray.push(imdbRating);
                                     rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
-                                    console.log(requestCounter);
                                   },
                                   complete: function() {
+                                    // when all of the requests have completed, render results on page by calling renderResults
                                     if (requestCounter === likedMovies.length) {
-                                      console.log(imdbRatingResultsArray);
-                                      console.log(rottenTomatoesRatingResultsArray);
+                                      changeButton();
                                       renderResults();
                                     }
                                   }
                                 })
-                                // $.getJSON(movieSearchUrl, function(data) {
-                                //   var imdbRating = data.imdbRating;
-                                //   var rottenTomatoesRating = data.tomatoMeter;
-                                //   console.log( movieTitle + ' IMDB: ' + imdbRating + ' RT: ' +
-                                //                rottenTomatoesRating + '%'  );
-                                //   imdbRatingResultsArray.push(imdbRating);
-                                //   rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
-                                // })
                               }
                             })
                           });
