@@ -2,9 +2,21 @@ $(document).ready(function() {
 
   var facebookID
 
+  // changes the button from 'find out' to 'share results'
   var changeButton = function() {
     $('#button').html('')
     $('#button').html('<button id="share-it" class="btn btn-lg btn-warning">Share Your Rating</button>')
+  };
+
+  // takes the movie information and returns a list item with the movie information
+  var renderMovie = function (movieName, imdbMovieScore, tomatoesMovieScore) {
+    return '<li>' + movieName + '  IMDB Rating: ' + imdbMovieScore + '  Rotten Tomatoes Rating: ' + tomatoesMovieScore;
+  };
+
+  // adds the movie to the page by calling renderMovie function
+  var addMovie = function (movieName, imdbMovieScore, tomatoesMovieScore) {
+    var html = renderMovie(movieName, imdbMovieScore, tomatoesMovieScore);
+    $('#results ul').append(html);
   };
 
   $('#get-it').click(function(){
@@ -43,9 +55,7 @@ $(document).ready(function() {
                             url: movieUrl,
                             dataType: 'json',
                             success: function(data) {
-                              console.log(data);
                               releaseDate = data.release_date.substring(data.release_date.length - 4);
-                              console.log(movieTitle + ' ' + releaseDate);
                             },
                             complete: function() {
                               var movieSearchUrl = 'http://www.omdbapi.com/?t=' + movieTitle + '&y=' +
@@ -57,6 +67,7 @@ $(document).ready(function() {
                                 rottenTomatoesMovieRatings.push(rottenTomatoesRating);
                                 console.log( movieTitle + ' IMDB: ' + imdbRating + ' RT: ' +
                                              rottenTomatoesRating + '%'  );
+                                addMovie(movieTitle, imdbRating, rottenTomatoesRating);
                               })
                             }
                           })
