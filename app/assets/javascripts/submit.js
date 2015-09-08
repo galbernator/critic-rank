@@ -4,7 +4,8 @@ $(document).ready(function() {
   var usersFacebookPicture;
   var usersName;
   var rank;
-  var usersFacebookProfileUrl
+  var usersFacebookProfileUrl;
+  var usersFacebookFriends = [];
   var likedMovies;
   var numberOfLikedMovies;
   var requestCounter = 0;
@@ -74,16 +75,34 @@ $(document).ready(function() {
           usersFacebookProfileUrl = response.url
           // Use the ID to get the movies
           usersFacebookID = response.id;
+          var userFriends;
           var userUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/movies?access_token=' +
                          accessToken
+          var userFriendsUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/friends?limit=800&access_token=' +
+                         accessToken
+          // get a  list user's friends
+          $.ajax({
+            url: userFriendsUrl,
+            dataType: 'json',
+            success: function(data) {
+                      console.log(data);
+                      userFriends = data.data;
+                    },
+            complete: function() {
+              for (var i = 0; i < userFriends.length; i += 1) {
+                usersFacebookFriends.push(userFriends[i].id);
+              };
+              console.log(usersFacebookFriends);
+            }
+          });
 
+          // get a user's liked movies
           $.ajax({
             url: userUrl,
             dataType: 'json',
             success: function(data) {
                       console.log(data);
                       likedMovies = data.data;
-                      console.log(data.data);
                       numberOfLikedMovies = likedMovies.length;
                     },
             complete: function() {
@@ -129,7 +148,7 @@ $(document).ready(function() {
                                       if (isNaN(parseFloat(rottenTomatoesRating)) === false) {
                                         rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
                                       }
-                                      console.log(movieTitle + ': IMDB-' + imdbRating + ' RT-' + rottenTomatoesRating);
+                                      console.log(movieTitle + '(' + releaseDate + '): IMDB-' + imdbRating + ' RT-' + rottenTomatoesRating);
                                     },
                                     error: function() {
                                       numberOfLikedMovies -= 1;
