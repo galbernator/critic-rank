@@ -13,24 +13,11 @@ $(document).ready(function() {
   var rottenTomatoesRatingResultsArray = [];
   var imdbAvg;
   var rottenTomatoesAvg;
-
-  // save the user to the database if not already saved
-  var saveUser = $.ajax({ url: '/users',
-                    type: 'POST',
-                    beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                    data: { facebook_id: usersFacebookID, name: usersName, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl },
-                    success: function(response) {
-                      console.log('User should be created');
-                    }
-                  })
-                  .fail(function(error){
-                    console.log(error);
-                  });
+  var overallAvg;
 
   var rankCalculate = function(rankArray) {
     if (rankArray == undefined) {
       return '<div class="share">Share to see your rank!</div>'
-      saveUser();
     } else {
       // insert code to find where in the ranking array the user falls
     }
@@ -47,14 +34,22 @@ $(document).ready(function() {
     $('#button').html('<button id="share-it" class="btn btn-lg btn-success">Share Your Rating</button>');
   };
 
+  // if there is an error, show the original button to user
   var returnToOriginalButton = function() {
     $('#button').html('');
     $('#button').html('<button id="get-it" class="btn btn-lg btn-warning">Find Out Now</button>');
   }
 
+  // calculate the overall average of both imdb abd rotten tomatoes
+  var overallAverage = function() {
+    overallAvg = (imdbAvg + (rottenTomatoesAvg/10))/2
+    console.log(overallAvg);
+    return overallAvg;
+  }
+
   // takes the movie information and returns a list item with the movie information
   var renderResults = function () {
-    var html = '<tr><td><div class="rank-box">' + rankCalculate(rank) + '</div></td><td><img src="' + usersFacebookPicture + '" class="profile-img" /></td><td class="name">' + usersName + '</td><td class="rating-title"><img src="http://gallowmere.com/wp-content/uploads/2012/06/imdb-logo.png" class="imdb-logo" /><div class="rating-result">' + averageRating(imdbRatingResultsArray) + '</div></td><td class="rating-title"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/dd/Rt-logo.svg/300px-Rt-logo.svg.png" class="rt-logo" /><div class="rating-result">' + averageRating(rottenTomatoesRatingResultsArray) + '%</div></td></tr>'
+    var html = '<tr><td><div class="rank-box">' + rankCalculate(rank) + '</div></td><td><img src="' + usersFacebookPicture + '" class="profile-img" /></td><td class="name">' + usersName + '</td><td class="rating-title"><img src="http://gallowmere.com/wp-content/uploads/2012/06/imdb-logo.png" class="imdb-logo" /><div class="rating-result">' + imdbAvg + '</div></td><td class="rating-title"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/dd/Rt-logo.svg/300px-Rt-logo.svg.png" class="rt-logo" /><div class="rating-result">' + rottenTomatoesAvg + '%</div></td></tr>'
     $('#results').html(html);
   };
 
@@ -166,16 +161,28 @@ $(document).ready(function() {
                                       }
                                       console.log(movieTitle + '(' + releaseDate + '): IMDB-' + imdbRating + ' RT-' + rottenTomatoesRating);
                                     },
-                                    error: function() {
-                                      numberOfLikedMovies -= 1;
-                                    },
                                     complete: function() {
-                                      // when all of the requests have completed, render results on page by calling renderResults
+                                      // when all of the requests have completed, calculate averages, render results on page by calling renderResults, and save user
                                       if (requestCounter === numberOfLikedMovies) {
+                                        imdbAvg = averageRating(imdbRatingResultsArray);
+                                        rottenTomatoesAvg = averageRating(rottenTomatoesRatingResultsArray);
+                                        overallAvg = overallAverage(imdbAvg, rottenTomatoesAvg);
+                                        renderResults();
                                         console.log('IMDB Array - ' + imdbRatingResultsArray);
                                         console.log('RT Array - ' + rottenTomatoesRatingResultsArray);
                                         changeButton();
-                                        renderResults();
+                                        // save users and rating results to the database
+                                        $.ajax({ url: '/users',
+                                                          type: 'POST',
+                                                          beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                                                          data: { facebook_id: usersFacebookID, name: usersName, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl, imdb_avg: imdbAvg, rt_avg: rottenTomatoesAvg, overall_avg: overallAvg },
+                                                          success: function(response) {
+                                                            console.log('User should be created');
+                                                          }
+                                                        })
+                                                        .fail(function(error){
+                                                          console.log(error);
+                                                        });
                                       }
                                     }
                                   })
