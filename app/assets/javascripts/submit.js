@@ -20,15 +20,20 @@ $(document).ready(function() {
   };
 
   var loadingResultsButton = function() {
-    $('#button').html('')
-    $('#button').html('<button class="btn btn-lg btn-info">Calculating Your Results <span class="glyphicon glyphicon-refresh spinning"></span></button>')
+    $('#button').html('');
+    $('#button').html('<button class="btn btn-lg btn-info">Calculating Your Results <span class="glyphicon glyphicon-refresh spinning"></span></button>');
   };
 
   // changes the button from 'find out' to 'share results'
   var changeButton = function() {
-    $('#button').html('')
-    $('#button').html('<button id="share-it" class="btn btn-lg btn-success">Share Your Rating</button>')
+    $('#button').html('');
+    $('#button').html('<button id="share-it" class="btn btn-lg btn-success">Share Your Rating</button>');
   };
+
+  var returnToOriginalButton = function() {
+    $('#button').html('');
+    $('#button').html('<button id="get-it" class="btn btn-lg btn-warning">Find Out Now</button>');
+  }
 
   // takes the movie information and returns a list item with the movie information
   var renderResults = function () {
@@ -55,13 +60,14 @@ $(document).ready(function() {
   $('#get-it').click(function(){
     OAuth.popup('facebook', function(error, result) {
       var accessToken = result.access_token;
-      // get the user ID to be able to search the movies on their Facebook page
+      console.log('Access Token: ' + accessToken);
       if (error) {
         alert(error); // do something with error
         return;
       } else {
         loadingResultsButton();
         result.me().done(function (response) {
+          console.log(response);
           // save the user's profile picture, name and profile url
           usersFacebookPicture = response.avatar;
           usersName = response.name;
@@ -75,64 +81,73 @@ $(document).ready(function() {
             url: userUrl,
             dataType: 'json',
             success: function(data) {
+                      console.log(data);
                       likedMovies = data.data;
+                      console.log(data.data);
                       numberOfLikedMovies = likedMovies.length;
                     },
             complete: function() {
-                          // loop through each movie in the likedMovies list
-                          $.each(likedMovies, function(i, movie) {
-                            var movieID = movie.id;
-                            var movieTitle = movie.name;
-                            var releaseDate
-                            var movieUrl = 'https://graph.facebook.com/v2.3/' + movieID +
-                                           '?fields=release_date&access_token=' + accessToken
-                            // send request to Facebook to get movie release year
-                            $.ajax({
-                              url: movieUrl,
-                              dataType: 'json',
-                              success: function(data) {
-                                if (data.release_date != undefined) {
-                                  releaseDate = data.release_date.substring(data.release_date.length - 4);
-                                }
-                              },
-                              complete: function(data) {
-                                if (data.release_date != undefined) {
-                                  // with the release year, search the OMDB database to get ratings info
-                                  var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle + '&y=' +
-                                                        releaseDate + '&type=movie&tomatoes=true&plot=short&r=json'
-                                } else {
-                                  var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle +
-                                                        '&type=movie&tomatoes=true&plot=short&r=json'
-                                }
-                                $.ajax({
-                                  url: movieSearchUrl,
-                                  dataType: 'json',
-                                  success: function(data) {
-                                    requestCounter += 1;
-                                    var imdbRating = data.imdbRating;
-                                    var rottenTomatoesRating = data.tomatoMeter;
-                                    if (imdbRating != undefined) {
-                                      imdbRatingResultsArray.push(imdbRating);
-                                    }
-                                    if (rottenTomatoesRating != undefined) {
-                                      rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
-                                    }
-                                    console.log(movieTitle + ': IMDB-' + imdbRating + ' RT-' + rottenTomatoesRating);
-                                  },
-                                  error: function() {
-                                    numberOfLikedMovies -= 1;
-                                  },
-                                  complete: function() {
-                                    // when all of the requests have completed, render results on page by calling renderResults
-                                    if (requestCounter === numberOfLikedMovies) {
-                                      changeButton();
-                                      renderResults();
-                                    }
+                          // if (numberOfLikedMovies === 0){
+                          //   alert('You do not have any "Liked" movies. Please go Facebook and "Like" your favorite movies and then try again.');
+                          //   returnToOriginalButton();
+                          // } else {
+                            // loop through each movie in the likedMovies list
+                            $.each(likedMovies, function(i, movie) {
+                              var movieID = movie.id;
+                              var movieTitle = movie.name;
+                              var releaseDate
+                              var movieUrl = 'https://graph.facebook.com/v2.3/' + movieID +
+                                             '?fields=release_date&access_token=' + accessToken
+                              // send request to Facebook to get movie release year
+                              $.ajax({
+                                url: movieUrl,
+                                dataType: 'json',
+                                success: function(data) {
+                                  if (data.release_date != undefined) {
+                                    releaseDate = data.release_date.substring(data.release_date.length - 4);
                                   }
-                                })
-                              }
-                            })
-                          });
+                                },
+                                complete: function(data) {
+                                  if (data.release_date != undefined) {
+                                    // with the release year, search the OMDB database to get ratings info
+                                    var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle + '&y=' +
+                                                          releaseDate + '&type=movie&tomatoes=true&plot=short&r=json'
+                                  } else {
+                                    var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle +
+                                                          '&type=movie&tomatoes=true&plot=short&r=json'
+                                  }
+                                  $.ajax({
+                                    url: movieSearchUrl,
+                                    dataType: 'json',
+                                    success: function(data) {
+                                      requestCounter += 1;
+                                      var imdbRating = data.imdbRating;
+                                      var rottenTomatoesRating = data.tomatoMeter;
+                                      if (isNaN(parseFloat(imdbRating)) === false) {
+                                        imdbRatingResultsArray.push(imdbRating);
+                                      }
+                                      if (isNaN(parseFloat(rottenTomatoesRating)) === false) {
+                                        rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
+                                      }
+                                      console.log(movieTitle + ': IMDB-' + imdbRating + ' RT-' + rottenTomatoesRating);
+                                    },
+                                    error: function() {
+                                      numberOfLikedMovies -= 1;
+                                    },
+                                    complete: function() {
+                                      // when all of the requests have completed, render results on page by calling renderResults
+                                      if (requestCounter === numberOfLikedMovies) {
+                                        console.log('IMDB Array - ' + imdbRatingResultsArray);
+                                        console.log('RT Array - ' + rottenTomatoesRatingResultsArray);
+                                        changeButton();
+                                        renderResults();
+                                      }
+                                    }
+                                  })
+                                }
+                              })
+                            });
+                          // };
                       }
             });
         })
