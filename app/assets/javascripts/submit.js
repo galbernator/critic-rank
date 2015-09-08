@@ -11,10 +11,26 @@ $(document).ready(function() {
   var requestCounter = 0;
   var imdbRatingResultsArray = [];
   var rottenTomatoesRatingResultsArray = [];
+  var imdbAvg;
+  var rottenTomatoesAvg;
+
+  // save the user to the database if not already saved
+  var saveUser = $.ajax({ url: '/users',
+                    type: 'POST',
+                    beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                    data: { facebook_id: usersFacebookID, name: usersName, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl },
+                    success: function(response) {
+                      console.log('User should be created');
+                    }
+                  })
+                  .fail(function(error){
+                    console.log(error);
+                  });
 
   var rankCalculate = function(rankArray) {
     if (rankArray == undefined) {
       return '<div class="share">Share to see your rank!</div>'
+      saveUser();
     } else {
       // insert code to find where in the ranking array the user falls
     }
@@ -69,7 +85,7 @@ $(document).ready(function() {
         loadingResultsButton();
         result.me().done(function (response) {
           console.log(response);
-          // save the user's profile picture, name and profile url
+          // save the user's profile picture, name and profile url and add to hidden form
           usersFacebookPicture = response.avatar;
           usersName = response.name;
           usersFacebookProfileUrl = response.url
@@ -78,8 +94,9 @@ $(document).ready(function() {
           var userFriends;
           var userUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/movies?access_token=' +
                          accessToken
-          var userFriendsUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/friends?limit=800&access_token=' +
+          var userFriendsUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/friends?limit=5000&access_token=' +
                          accessToken
+
           // get a  list user's friends
           $.ajax({
             url: userFriendsUrl,
@@ -101,15 +118,14 @@ $(document).ready(function() {
             url: userUrl,
             dataType: 'json',
             success: function(data) {
-                      console.log(data);
                       likedMovies = data.data;
                       numberOfLikedMovies = likedMovies.length;
                     },
             complete: function() {
-                          // if (numberOfLikedMovies === 0){
-                          //   alert('You do not have any "Liked" movies. Please go Facebook and "Like" your favorite movies and then try again.');
-                          //   returnToOriginalButton();
-                          // } else {
+                          if (numberOfLikedMovies === 0){
+                            alert('You do not have any "Liked" movies. Please go Facebook and "Like" your favorite movies and then try again.');
+                            returnToOriginalButton();
+                          } else {
                             // loop through each movie in the likedMovies list
                             $.each(likedMovies, function(i, movie) {
                               var movieID = movie.id;
@@ -166,7 +182,7 @@ $(document).ready(function() {
                                 }
                               })
                             });
-                          // };
+                          };
                       }
             });
         })
