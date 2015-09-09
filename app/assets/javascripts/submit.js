@@ -14,6 +14,7 @@ $(document).ready(function() {
   var imdbAvg;
   var rottenTomatoesAvg;
   var overallAvg;
+  var currentUserID;
 
   var rankCalculate = function(rankArray) {
     if (rankArray == undefined) {
@@ -173,16 +174,35 @@ $(document).ready(function() {
                                         changeButton();
                                         // save users and rating results to the database
                                         $.ajax({ url: '/users',
-                                                          type: 'POST',
-                                                          beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                                                          data: { facebook_id: usersFacebookID, name: usersName, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl, imdb_avg: imdbAvg, rt_avg: rottenTomatoesAvg, overall_avg: overallAvg },
-                                                          success: function(response) {
+                                                 type: 'POST',
+                                                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                                                 data: { facebook_id: usersFacebookID, name: usersName, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl, imdb_avg: imdbAvg, rt_avg: rottenTomatoesAvg, overall_avg: overallAvg },
+                                                 success: function(response) {
                                                             console.log('User should be created');
+                                                          },
+                                                 complete: function() {
+                                                   $.ajax({
+                                                      url: '/users',
+                                                      dataType: 'json',
+                                                      success: function(data) {
+                                                        // find the current user's id from all users
+                                                        for (var i = 0; i< data.length; i += 1) {
+                                                          if (usersFacebookID === data[i].facebook_id) {
+                                                              currentUserID = data[i].id;
+                                                                console.log(currentUserID);
                                                           }
-                                                        })
-                                                        .fail(function(error){
-                                                          console.log(error);
-                                                        });
+                                                        }
+                                                      },
+                                                      complete: function() {
+                                                        // save the current user's friends to the Friends table
+
+                                                      }
+                                                    })
+                                                  }
+                                            })
+                                            .fail(function(error){
+                                              console.log(error);
+                                            });
                                       }
                                     }
                                   })
