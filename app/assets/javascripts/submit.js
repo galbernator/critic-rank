@@ -100,13 +100,14 @@ $(document).ready(function() {
             success: function(data) {
                       console.log(data);
                       userFriends = data.data;
-                    },
-            complete: function() {
-              for (var i = 0; i < userFriends.length; i += 1) {
-                usersFacebookFriends.push(userFriends[i].id);
-              };
-              console.log(usersFacebookFriends);
             }
+            // ,
+            // complete: function() {
+            //   for (var i = 0; i < userFriends.length; i += 1) {
+            //     usersFacebookFriends.push(userFriends[i].id);
+            //   };
+            //   console.log(usersFacebookFriends);
+            // }
           });
 
           // get a user's liked movies
@@ -188,14 +189,27 @@ $(document).ready(function() {
                                                         // find the current user's id from all users
                                                         for (var i = 0; i< data.length; i += 1) {
                                                           if (usersFacebookID === data[i].facebook_id) {
-                                                              currentUserID = data[i].id;
-                                                                console.log(currentUserID);
+                                                            currentUserID = data[i].id;
+                                                            document.cookie="current_user=" + currentUserID;
                                                           }
                                                         }
                                                       },
                                                       complete: function() {
                                                         // save the current user's friends to the Friends table
-
+                                                        $.each(userFriends, function(i, friend) {
+                                                          $.ajax({
+                                                            url: '/friends',
+                                                            type: 'POST',
+                                                            beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                                                            data: { facebook_id: friend.id, user_id: currentUserID },
+                                                            success: function() {
+                                                              console.log('friend added');
+                                                            },
+                                                            complete: function() {
+                                                              console.log('adding friends complete');
+                                                            }
+                                                          })
+                                                        })
                                                       }
                                                     })
                                                   }
