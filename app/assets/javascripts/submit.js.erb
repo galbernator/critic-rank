@@ -15,6 +15,7 @@ $(document).ready(function() {
   var rottenTomatoesAvg;
   var overallAvg;
   var currentUserID;
+  var userAndFriendsResultsArray = [];
 
   var rankCalculate = function(rankArray) {
     if (rankArray == undefined) {
@@ -51,6 +52,7 @@ $(document).ready(function() {
   // takes the movie information and returns a list item with the movie information
   var renderResults = function () {
     var html = '<tr><td><div class="rank-box">' + rankCalculate(rank) + '</div></td><td><img src="' + usersFacebookPicture + '" class="profile-img" /></td><td class="name">' + usersName + '</td><td class="rating-title"><img src="http://gallowmere.com/wp-content/uploads/2012/06/imdb-logo.png" class="imdb-logo" /><div class="rating-result">' + imdbAvg + '</div></td><td class="rating-title"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/dd/Rt-logo.svg/300px-Rt-logo.svg.png" class="rt-logo" /><div class="rating-result">' + rottenTomatoesAvg + '%</div></td></tr>'
+
     $('#results').html(html);
   };
 
@@ -73,14 +75,12 @@ $(document).ready(function() {
   $('#get-it').click(function(){
     OAuth.popup('facebook', function(error, result) {
       var accessToken = result.access_token;
-      console.log('Access Token: ' + accessToken);
       if (error) {
         alert(error); // do something with error
         return;
       } else {
         loadingResultsButton();
         result.me().done(function (response) {
-          console.log(response);
           // save the user's profile picture, name and profile url and add to hidden form
           usersFacebookPicture = response.avatar;
           usersName = response.name;
@@ -93,21 +93,18 @@ $(document).ready(function() {
           var userFriendsUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/friends?limit=5000&access_token=' +
                          accessToken
 
-          // get a  list user's friends
+          // get a  list user's friends to find their results later
           $.ajax({
             url: userFriendsUrl,
             dataType: 'json',
             success: function(data) {
-                      console.log(data);
                       userFriends = data.data;
+            },
+            complete: function() {
+              for (var i = 0; i < userFriends.length; i += 1) {
+                usersFacebookFriends.push(userFriends[i].id);
+              };
             }
-            // ,
-            // complete: function() {
-            //   for (var i = 0; i < userFriends.length; i += 1) {
-            //     usersFacebookFriends.push(userFriends[i].id);
-            //   };
-            //   console.log(usersFacebookFriends);
-            // }
           });
 
           // get a user's liked movies
@@ -169,6 +166,15 @@ $(document).ready(function() {
                                         imdbAvg = averageRating(imdbRatingResultsArray);
                                         rottenTomatoesAvg = averageRating(rottenTomatoesRatingResultsArray);
                                         overallAvg = overallAverage(imdbAvg, rottenTomatoesAvg);
+
+
+                                        // get the friends database and find all friends who belong to current user and add them to the userAndFriendsResultsArray
+                                        $.ajax({
+                                          url: '/friends',
+                                          dataType: 'json',
+                                          success: function(data) {
+                                          }
+                                        })
                                         renderResults();
                                         console.log('IMDB Array - ' + imdbRatingResultsArray);
                                         console.log('RT Array - ' + rottenTomatoesRatingResultsArray);
@@ -204,9 +210,46 @@ $(document).ready(function() {
                                                             data: { facebook_id: friend.id, user_id: currentUserID },
                                                             success: function() {
                                                               console.log('friend added');
+                                                              // get information for each friend and save the variables to render them
                                                             },
                                                             complete: function() {
                                                               console.log('adding friends complete');
+                                                              // save the current user's friends to the Friends table
+                                                              $.each(userFriends, function(i, friend) {
+                                                                $.ajax({
+                                                                  url: '/friends',
+                                                                  type: 'POST',
+                                                                  beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                                                                  data: { facebook_id: friend.id, user_id: currentUserID },
+                                                                  success: function() {
+                                                                    // get information for each friend and save the variables to render them
+                                                                  },
+                                                                  complete: function() {
+                                                                    // add the current user to the userAndFriendsResultsArray
+                                                                    userAndFriendsResultsArray.push({ name: usersName, avatar: usersFacebookPicture, overall_average: overallAvg, imdb_average: imdbAvg, rt_average: rottenTomatoesAvg });
+
+                                                                    // get friend's user info and movie ratings and add them to userAndFriendsResultsArray
+                                                                    $.each(userFriends, function(i, friend) {
+                                                                      var allUserData;
+                                                                      $.ajax({
+                                                                        url: '/users',
+                                                                        dataType: 'json',
+                                                                        success: function(data) {
+                                                                          allUserData = data;
+                                                                        },
+                                                                        complete: function() {
+                                                                          for (var i = 0; i < allUserData.length; i += 1) {
+                                                                            // need to fix this and find out the best way to loop through the user data and find each of the friends
+                                                                            if (allUserData[i].facebook_id === friend.id) {
+                                                                              userAndFriendsResultsArray.push({ name: friend.name, avatar: friend.facebook_picture, overall_average: friend.overall_avg, imdb_average: friend.imdb_avg, rt_average: friend.rt_avg });
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      })
+                                                                    })
+                                                                  }
+                                                                })
+                                                              })
                                                             }
                                                           })
                                                         })
@@ -215,7 +258,6 @@ $(document).ready(function() {
                                                   }
                                             })
                                             .fail(function(error){
-                                              console.log(error);
                                             });
                                       }
                                     }
