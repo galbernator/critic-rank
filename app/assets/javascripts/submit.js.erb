@@ -3,7 +3,6 @@ $(document).ready(function() {
   var usersFacebookID;
   var usersFacebookPicture;
   var usersName;
-  var rank;
   var usersFacebookProfileUrl;
   var usersFacebookFriends = [];
   var likedMovies;
@@ -16,14 +15,6 @@ $(document).ready(function() {
   var overallAvg;
   var currentUserID;
   var userAndFriendsResultsArray = [];
-
-  var rankCalculate = function(rankArray) {
-    if (rankArray == undefined) {
-      return '<div class="share">Share to see your rank!</div>'
-    } else {
-      // insert code to find where in the ranking array the user falls
-    }
-  };
 
   var loadingResultsButton = function() {
     $('#button').html('');
@@ -50,10 +41,10 @@ $(document).ready(function() {
   }
 
   // takes the movie information and returns a list item with the movie information
-  var renderResults = function () {
-    var html = '<tr><td><div class="rank-box">' + rankCalculate(rank) + '</div></td><td><img src="' + usersFacebookPicture + '" class="profile-img" /></td><td class="name">' + usersName + '</td><td class="rating-title"><img src="http://gallowmere.com/wp-content/uploads/2012/06/imdb-logo.png" class="imdb-logo" /><div class="rating-result">' + imdbAvg + '</div></td><td class="rating-title"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/dd/Rt-logo.svg/300px-Rt-logo.svg.png" class="rt-logo" /><div class="rating-result">' + rottenTomatoesAvg + '%</div></td></tr>'
+  var renderResults = function (person, rank) {
+    var html = '<tr><td><div class="rank-box">' + rank + '</div></td><td><img src="' + person.avatar + '" class="profile-img" /></td><td class="name">' + person.name + '</td><td class="rating-title"><img src="http://gallowmere.com/wp-content/uploads/2012/06/imdb-logo.png" class="imdb-logo" /><div class="rating-result">' + person.imdb_average + '</div></td><td class="rating-title"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/dd/Rt-logo.svg/300px-Rt-logo.svg.png" class="rt-logo" /><div class="rating-result">' + person.rt_average + '%</div></td></tr>'
 
-    $('#results').html(html);
+    $('#results').append(html);
   };
 
   // averages the ratings of the IMDB results in the imdbRatingResultsArray
@@ -175,10 +166,8 @@ $(document).ready(function() {
                                           success: function(data) {
                                           }
                                         })
-                                        renderResults();
                                         console.log('IMDB Array - ' + imdbRatingResultsArray);
                                         console.log('RT Array - ' + rottenTomatoesRatingResultsArray);
-                                        changeButton();
                                         // save users and rating results to the database
                                         $.ajax({ url: '/users',
                                                  type: 'POST',
@@ -241,9 +230,34 @@ $(document).ready(function() {
                                                                           for (var i = 0; i < allUserData.length; i += 1) {
                                                                             // need to fix this and find out the best way to loop through the user data and find each of the friends
                                                                             if (allUserData[i].facebook_id === friend.id) {
-                                                                              userAndFriendsResultsArray.push({ name: friend.name, avatar: friend.facebook_picture, overall_average: friend.overall_avg, imdb_average: friend.imdb_avg, rt_average: friend.rt_avg });
+                                                                              userAndFriendsResultsArray.push({ name: allUserData[i].name, avatar: allUserData[i].facebook_picture, overall_average: allUserData[i].overall_avg, imdb_average: allUserData[i].imdb_avg, rt_average: allUserData[i].rt_avg });
                                                                             }
                                                                           }
+                                                                          userAndFriendsResultsArray = userAndFriendsResultsArray.sort(function(obj1, obj2) {
+	                                                                                                                                        // Ascending: first age less than the previous
+	                                                                                                                                        return obj2.overall_average - obj1.overall_average;
+                                                                                                                                        });
+                                                                          console.log('Should be an array sorted by overall average:');
+                                                                          console.log(userAndFriendsResultsArray);
+                                                                          // loop throguh the array and show the friend
+                                                                          for (var i = 0; i < userAndFriendsResultsArray.length; i += 1) {
+                                                                            var rank;
+                                                                            console.log('render loop #' + i+1 + 'started');
+                                                                            if (userAndFriendsResultsArray.length === 1) {
+                                                                              rank = '<div class="share">Share to see your rank!</div>'
+                                                                            } else if (i > 1 && userAndFriendsResultsArray[i].overall_average === userAndFriendsResultsArray[i-1].overall_average) {
+                                                                              // in case there are 3 in a row that are tied (thinking that the probability of more than 3 people being tied is an extreme edge case)
+                                                                              if (i > 2 && userAndFriendsResultsArray[i-1].overall_average === userAndFriendsResultsArray[i-2].overall_average) {
+                                                                                rank = i - 1;
+                                                                              } else {
+                                                                                rank = i
+                                                                              }
+                                                                            } else {
+                                                                              rank = i + 1;
+                                                                            }
+                                                                            renderResults(userAndFriendsResultsArray[i], rank );
+                                                                          }
+                                                                          changeButton();
                                                                         }
                                                                       })
                                                                     })
