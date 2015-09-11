@@ -14,6 +14,7 @@ $(document).ready(function() {
   var rottenTomatoesAvg;
   var overallAvg;
   var currentUserID;
+  var currentUserData;
   var userAndFriendsResultsArray = [];
   var allUserData;
 
@@ -43,7 +44,7 @@ $(document).ready(function() {
 
   // takes the movie information and returns a list item with the movie information
   var renderResults = function (person, rank) {
-    var html = '<tr><td><div class="rank-box">' + rank + '</div></td><td><img src="' + person.avatar + '" class="profile-img" /></td><td class="name">' + person.name + '</td><td class="rating-title"><img src="http://gallowmere.com/wp-content/uploads/2012/06/imdb-logo.png" class="imdb-logo" /><div class="rating-result">' + person.imdb_average + '</div></td><td class="rating-title"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/dd/Rt-logo.svg/300px-Rt-logo.svg.png" class="rt-logo" /><div class="rating-result">' + person.rt_average + '%</div></td></tr>'
+    var html = '<tr><td><div class="rank-box">' + rank + '</div></td><td><img src="' + person.avatar + '" class="profile-img" /></td><td><div><div class="name">' + person.name + '</div><div class="overall-rating">' + averageControl(person.overall_average) + ' Average Rating</div></div></td><td class="rating-title"><img src="http://gallowmere.com/wp-content/uploads/2012/06/imdb-logo.png" class="imdb-logo" /><div class="rating-result">' + person.imdb_average + '</div></td><td class="rating-title"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/dd/Rt-logo.svg/300px-Rt-logo.svg.png" class="rt-logo" /><div class="rating-result">' + person.rt_average + '%</div></td></tr>'
 
     $('#results').append(html);
   };
@@ -62,6 +63,14 @@ $(document).ready(function() {
       alert('Your results could not be calculated becuase no rating results were received. Please try again later.')
     }
     return average
+  };
+
+  var averageControl = function(avg) {
+    if (avg.toString().length > 6) {
+      return avg.toFixed(4);
+    } else {
+      return avg;
+    }
   };
 
 
@@ -190,6 +199,7 @@ $(document).ready(function() {
                                                         for (var i = 0; i< data.length; i += 1) {
                                                           if (usersFacebookID === data[i].facebook_id) {
                                                             currentUserID = data[i].id;
+                                                            currentUserData = data[i];
                                                             document.cookie="current_user=" + currentUserID;
                                                           }
                                                         }
@@ -238,6 +248,10 @@ $(document).ready(function() {
                                                           // find a way to make sure that the addition to the list is unique
                                                         }
                                                         changeButton();
+
+                                                        // set the meta data for Facebook Graph sharing markup
+                                                        $('meta[property="og:title"]').prop('content','My Critic Rank is ' + currentUserData.overall_avg + '/10. Click to see if you are better than me.')
+
                                                         // save the current user's friends to the Friends table
                                                         $.each(userFriends, function(i, friend) {
                                                           $.ajax({
@@ -253,54 +267,7 @@ $(document).ready(function() {
                                                             }
                                                           })
                                                         })
-                                                        // get friend's user info and movie ratings and add them to userAndFriendsResultsArray
-                                                        // $.each(userFriends, function(i, friend) {
-                                                        //   $.ajax({
-                                                        //     url: '/users',
-                                                        //     dataType: 'json',
-                                                        //     success: function(data) {
-                                                        //     },
-                                                        //     complete: function() {
-                                                        //       console.log('All the user data');
-                                                        //       console.log(allUserData);
-                                                        //       for (var i = 0; i < allUserData.length; i += 1) {
-                                                        //         if (allUserData[i].facebook_id === friend.id) {
-                                                        //           userAndFriendsResultsArray.push({ name: allUserData[i].name, avatar: allUserData[i].facebook_picture, overall_average: allUserData[i].overall_avg, imdb_average: allUserData[i].imdb_avg, rt_average: allUserData[i].rt_avg });
-                                                        //         }
-                                                        //       }
-                                                        //       // add the current user to the userAndFriendsResultsArray
-                                                        //       userAndFriendsResultsArray.push({ name: usersName, avatar: usersFacebookPicture, overall_average: overallAvg, imdb_average: imdbAvg, rt_average: rottenTomatoesAvg });
-                                                        //       // userAndFriendsResultsArray = userAndFriendsResultsArray.sort(function(obj1, obj2) {
-                                                        //       //                                                                 // Ascending: first age less than the previous
-                                                        //       //                                                                 return obj2.overall_average - obj1.overall_average;
-                                                        //       //                                                               });
-                                                        //       console.log('Should be an array sorted by overall average:');
-                                                        //       console.log(userAndFriendsResultsArray);
-                                                        //       console.log('Here is the length of the user data');
-                                                        //       console.log(allUserData.length);
-                                                        //       // loop throguh the array and assign the friend's rank
-                                                        //       for (var i = 0; i < userAndFriendsResultsArray.length; i += 1) {
-                                                        //         var rank;
-                                                        //         console.log('render loop #' + i+1 + 'started');
-                                                        //         if (userAndFriendsResultsArray.length === 1) {
-                                                        //           rank = '<div class="share">Share to see your rank!</div>'
-                                                        //         } else if (i > 1 && userAndFriendsResultsArray[i].overall_average === userAndFriendsResultsArray[i-1].overall_average) {
-                                                        //           // in case there are 3 in a row that are tied (thinking that the probability of more than 3 people being tied is an extreme edge case)
-                                                        //           if (i > 2 && userAndFriendsResultsArray[i-1].overall_average === userAndFriendsResultsArray[i-2].overall_average) {
-                                                        //             rank = i - 1;
-                                                        //           } else {
-                                                        //             rank = i
-                                                        //           }
-                                                        //         } else {
-                                                        //           rank = i + 1;
-                                                        //         }
-                                                        //         renderResults(userAndFriendsResultsArray[i], rank );
-                                                        //         // find a way to make sure that the addition to the list is unique
-                                                        //       }
-                                                        //       changeButton();
-                                                        //     }
-                                                        //   })
-                                                        // })
+
                                                       }
                                                     })
                                                   }
@@ -323,4 +290,9 @@ $(document).ready(function() {
       }
     });
   });
+
+  $('share').click(function() {
+    console.log('Share Button Clicked');
+
+  })
 });
