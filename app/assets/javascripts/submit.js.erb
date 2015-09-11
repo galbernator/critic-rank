@@ -295,30 +295,30 @@ $(document).ready(function() {
     console.log('Share Button Clicked');
 
     // create the Facebook Open Graph URL
-    var fbAppId = 626000787502874;
-    var fbAppUrl = $('meta[property="og:url"]').prop('content');
-    var fbAppDescription = $('meta[property="og:description"]').prop('content');
-    var fbAppTitle = $('meta[property="og:title"]').prop('content');
-    var fbAppImage = $('meta[property="og:image"]').prop('content');
-
-    var url = 'http://www.facebook.com/dialog/feed?app_id=' + fbAppId +
-        '&link=' + fbAppUrl +
-        '&picture=' + fbAppImage +
-        '&name=' + fbAppTitle +
-        '&caption=' + fbAppTitle +
-        '&description=' + fbAppDescription +
-        '&redirect_uri=oauth.io' +
-        '&display=popup';
-
-    var openShareWindow = function(url) {
-      window.open(url,
-                'feedDialog',
-                'toolbar=0,status=0,width=626,height=436'
-              );
-
-    }
-
-    openShareWindow(url);
+    // var fbAppId = 626000787502874;
+    // var fbAppUrl = $('meta[property="og:url"]').prop('content');
+    // var fbAppDescription = $('meta[property="og:description"]').prop('content');
+    // var fbAppTitle = $('meta[property="og:title"]').prop('content');
+    // var fbAppImage = $('meta[property="og:image"]').prop('content');
+    //
+    // var url = 'http://www.facebook.com/dialog/feed?app_id=' + fbAppId +
+    //     '&link=' + fbAppUrl +
+    //     '&picture=' + fbAppImage +
+    //     '&name=' + fbAppTitle +
+    //     '&caption=' + fbAppTitle +
+    //     '&description=' + fbAppDescription +
+    //     '&redirect_uri=https://criticrank.herokuapp.com' +
+    //     '&display=popup';
+    //
+    // var openShareWindow = function(url) {
+    //   window.open(url,
+    //             'feedDialog',
+    //             'toolbar=0,status=0,width=626,height=436'
+    //           );
+    //
+    // }
+    //
+    // openShareWindow(url);
 
 
 
