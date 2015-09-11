@@ -1,6 +1,7 @@
 $(document).ready(function() {
 
   var usersFacebookID;
+  var fbAccessToken;
   var usersFacebookPicture;
   var usersName;
   var usersFacebookProfileUrl;
@@ -76,7 +77,8 @@ $(document).ready(function() {
 
   $('#get-it').click(function() {
     OAuth.popup('facebook', function(error, result) {
-      var accessToken = result.access_token;
+      var fbAccessToken = result.access_token;
+      console.log(fbAccessToken);
       if (error) {
         alert(error); // do something with error
         return;
@@ -91,9 +93,9 @@ $(document).ready(function() {
           usersFacebookID = response.id;
           var userFriends;
           var userUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/movies?access_token=' +
-                         accessToken
+                         fbAccessToken
           var userFriendsUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/friends?limit=5000&access_token=' +
-                         accessToken
+                         fbAccessToken
 
           // get a  list user's friends to find their results later
           $.ajax({
@@ -128,7 +130,7 @@ $(document).ready(function() {
                               var movieTitle = movie.name;
                               var releaseDate
                               var movieUrl = 'https://graph.facebook.com/v2.3/' + movieID +
-                                             '?fields=release_date&access_token=' + accessToken
+                                             '?fields=release_date&access_token=' + fbAccessToken
                               // send request to Facebook to get movie release year
                               $.ajax({
                                 url: movieUrl,
@@ -250,7 +252,8 @@ $(document).ready(function() {
                                                         changeButton();
 
                                                         // set the meta data for Facebook Graph sharing markup
-                                                        $('meta[property="og:title"]').prop('content','My Critic Rank is ' + currentUserData.overall_avg + '/10. Click to see if you are better than me.')
+                                                        $('meta[property="og:title"]').prop('content','My Critic Rank is ' + currentUserData.overall_avg + ' out of 10. Can you beat me?');
+                                                        $('meta[property="og:critic_rating"]').prop('content',overallAvg);
 
                                                         // save the current user's friends to the Friends table
                                                         $.each(userFriends, function(i, friend) {
@@ -291,34 +294,44 @@ $(document).ready(function() {
     });
   });
 
-  $('#share-it').on('click', '#button', function() {
-    console.log('Share Button Clicked');
+  $(document).on('click', '#share-it', function() {
+    console.log("Share button clicked");
 
     // create the Facebook Open Graph URL
-    // var fbAppId = 626000787502874;
-    // var fbAppUrl = $('meta[property="og:url"]').prop('content');
-    // var fbAppDescription = $('meta[property="og:description"]').prop('content');
-    // var fbAppTitle = $('meta[property="og:title"]').prop('content');
-    // var fbAppImage = $('meta[property="og:image"]').prop('content');
-    //
-    // var url = 'http://www.facebook.com/dialog/feed?app_id=' + fbAppId +
-    //     '&link=' + fbAppUrl +
-    //     '&picture=' + fbAppImage +
-    //     '&name=' + fbAppTitle +
-    //     '&caption=' + fbAppTitle +
-    //     '&description=' + fbAppDescription +
-    //     '&redirect_uri=https://criticrank.herokuapp.com' +
-    //     '&display=popup';
-    //
-    // var openShareWindow = function(url) {
-    //   window.open(url,
-    //             'feedDialog',
-    //             'toolbar=0,status=0,width=626,height=436'
-    //           );
-    //
-    // }
-    //
-    // openShareWindow(url);
+    var fbAppId = 626000787502874;
+    var fbAppUrl = $('meta[property="og:url"]').prop('content');
+    var fbAppDescription = $('meta[property="og:description"]').prop('content');
+    var fbAppTitle = $('meta[property="og:title"]').prop('content');
+    var fbAppImage = $('meta[property="og:image"]').prop('content');
+
+    var url = 'http://www.facebook.com/dialog/feed?app_id=' + fbAppId +
+        '&link=' + fbAppUrl +
+        '&picture=' + fbAppImage +
+        '&name=' + fbAppTitle +
+        '&description=' + fbAppDescription +
+        '&redirect_uri=https://criticrank.herokuapp.com/popupclose.html' +
+        '&display=popup';
+
+    var openShareWindow = function(url) {
+      window.open(url,
+                'feedDialog',
+                'toolbar=0,status=0,width=626,height=436'
+              );
+
+    }
+
+    var openPostWindow = function() {
+
+      var url = 'https://graph.facebook.com/me/criticrank:find?access_token=' + fbAccessToken + '&method=POST&critic_rating=http%3A%2F%2Fsamples.ogp.me%2F630779903691629'
+
+      window.open(url,
+                'feedDialog',
+                'toolbar=0,status=0,width=626,height=436'
+              );
+
+    }
+
+    openShareWindow(url);
 
 
 
