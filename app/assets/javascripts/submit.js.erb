@@ -215,6 +215,10 @@ $(document).ready(function() {
                                                         // add the current user to the userAndFriendsResultsArray
                                                         userAndFriendsResultsArray.push({ name: usersName, avatar: usersFacebookPicture, overall_average: overallAvg, imdb_average: imdbAvg, rt_average: rottenTomatoesAvg });
                                                         userAndFriendsResultsArray = userAndFriendsResultsArray.sort(function(obj1, obj2) {
+                                                      // Ascending: first age less than the previous
+                                                       return obj2.overall_average - obj1.overall_average;
+                                                        });
+
 
                                                         // loop throguh the array and assign the friend's rank
                                                         for (var i = 0; i < userAndFriendsResultsArray.length; i += 1) {
