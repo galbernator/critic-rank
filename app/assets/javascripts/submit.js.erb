@@ -216,12 +216,14 @@ $(document).ready(function() {
                                                           var friend = usersFacebookFriends[i];
                                                           for (var j = 0; j < allUserData.length; j += 1) {
                                                             if (allUserData[j].facebook_id === friend) {
-                                                              userAndFriendsResultsArray.push({ name: allUserData[i].name, avatar: allUserData[i].facebook_picture, overall_average: allUserData[i].overall_avg, imdb_average: allUserData[i].imdb_avg, rt_average: allUserData[i].rt_avg });
+                                                              userAndFriendsResultsArray.push({ name: allUserData[j].name, avatar: allUserData[j].facebook_picture, overall_average: allUserData[j].overall_avg, imdb_average: allUserData[j].imdb_avg, rt_average: allUserData[j].rt_avg });
                                                             }
                                                           }
                                                         }
                                                         // add the current user to the userAndFriendsResultsArray
                                                         userAndFriendsResultsArray.push({ name: usersName, avatar: usersFacebookPicture, overall_average: overallAvg, imdb_average: imdbAvg, rt_average: rottenTomatoesAvg });
+                                                        console.log('UserandFriends Array:');
+                                                        console.log(userAndFriendsResultsArray);
                                                         userAndFriendsResultsArray = userAndFriendsResultsArray.sort(function(obj1, obj2) {
                                                                                                                         // Ascending: first age less than the previous
                                                                                                                         return obj2.overall_average - obj1.overall_average;
