@@ -39,7 +39,6 @@ $(document).ready(function() {
   // calculate the overall average of both imdb abd rotten tomatoes
   var overallAverage = function() {
     overallAvg = (imdbAvg + (rottenTomatoesAvg/10))/2
-    console.log(overallAvg);
     return overallAvg;
   }
 
@@ -78,7 +77,6 @@ $(document).ready(function() {
   $('#get-it').click(function() {
     OAuth.popup('facebook', function(error, result) {
       var fbAccessToken = result.access_token;
-      console.log(fbAccessToken);
       if (error) {
         alert(error); // do something with error
         return;
@@ -183,8 +181,6 @@ $(document).ready(function() {
 
                                           }
                                         })
-                                        console.log('IMDB Array - ' + imdbRatingResultsArray);
-                                        console.log('RT Array - ' + rottenTomatoesRatingResultsArray);
                                         // save users and rating results to the database
                                         $.ajax({ url: '/users',
                                                  type: 'POST',
@@ -207,11 +203,7 @@ $(document).ready(function() {
                                                         }
                                                       },
                                                       complete: function(data) {
-                                                        console.log('Users Facebook friends');
-                                                        console.log(usersFacebookFriends);
                                                         allUserData = data.responseJSON;
-                                                        console.log('All the user data');
-                                                        console.log(allUserData);
                                                         for (var i = 0; i < usersFacebookFriends.length; i += 1){
                                                           var friend = usersFacebookFriends[i];
                                                           for (var j = 0; j < allUserData.length; j += 1) {
@@ -222,20 +214,11 @@ $(document).ready(function() {
                                                         }
                                                         // add the current user to the userAndFriendsResultsArray
                                                         userAndFriendsResultsArray.push({ name: usersName, avatar: usersFacebookPicture, overall_average: overallAvg, imdb_average: imdbAvg, rt_average: rottenTomatoesAvg });
-                                                        console.log('UserandFriends Array:');
-                                                        console.log(userAndFriendsResultsArray);
                                                         userAndFriendsResultsArray = userAndFriendsResultsArray.sort(function(obj1, obj2) {
-                                                                                                                        // Ascending: first age less than the previous
-                                                                                                                        return obj2.overall_average - obj1.overall_average;
-                                                                                                                      });
-                                                        console.log('Should be an array sorted by overall average:');
-                                                        console.log(userAndFriendsResultsArray);
-                                                        console.log('Here is the length of the user data');
-                                                        console.log(allUserData.length);
+
                                                         // loop throguh the array and assign the friend's rank
                                                         for (var i = 0; i < userAndFriendsResultsArray.length; i += 1) {
                                                           var rank;
-                                                          console.log('render loop #' + i+1 + 'started');
                                                           if (userAndFriendsResultsArray.length === 1) {
                                                             rank = '<div class="share">Share to see your rank!</div>'
                                                           } else if (i > 1 && userAndFriendsResultsArray[i].overall_average === userAndFriendsResultsArray[i-1].overall_average) {
@@ -297,7 +280,6 @@ $(document).ready(function() {
   });
 
   $(document).on('click', '#share-it', function() {
-    console.log("Share button clicked");
 
     // create the Facebook Open Graph URL
     var fbAppId = 626000787502874;
@@ -315,17 +297,6 @@ $(document).ready(function() {
         '&display=popup';
 
     var openShareWindow = function(url) {
-      window.open(url,
-                'feedDialog',
-                'toolbar=0,status=0,width=626,height=436'
-              );
-
-    }
-
-    var openPostWindow = function() {
-
-      var url = 'https://graph.facebook.com/me/criticrank:find?access_token=' + fbAccessToken + '&method=POST&critic_rating=http%3A%2F%2Fsamples.ogp.me%2F630779903691629'
-
       window.open(url,
                 'feedDialog',
                 'toolbar=0,status=0,width=626,height=436'
