@@ -1,3 +1,7 @@
+#body {
+  background-color: #cff0fa;
+}
+
 .glyphicon.spinning {
     animation: spin 1s infinite linear;
     -webkit-animation: spin2 1s infinite linear;
@@ -83,4 +87,21 @@
 
 .rt-logo {
   max-height: 30px;
+}
+
+// .ticket {
+//   background: url(asset_path('ticket.png')) no-repeat center;
+//   width: 60%;
+//   height:auto;
+// }
+
+.description {
+  // padding: 130px 135px;
+  max-width: 74%;
+  padding: 15px 90px 80px 60px;
+}
+
+.sub-title {
+  max-width: 68%;
+  font-family: 'Lilita One', cursive;
 }
