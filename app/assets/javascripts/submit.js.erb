@@ -4,6 +4,7 @@ $(document).ready(function() {
   var fbAccessToken;
   var usersFacebookPicture;
   var usersName;
+  var usersEmail;
   var usersFacebookProfileUrl;
   var usersFacebookFriends = [];
   var likedMovies;
@@ -106,6 +107,19 @@ $(document).ready(function() {
               for (var i = 0; i < userFriends.length; i += 1) {
                 usersFacebookFriends.push(userFriends[i].id);
               };
+              // request current users email address to be saved
+              $.ajax({
+                url: 'https://graph.facebook.com/v2.3/' + usersFacebookID +
+                      '/?fields=email&access_token=' + fbAccessToken ,
+                dataType: 'json',
+                success: function(data) {
+                  usersEmail = data.email;
+                },
+                complete: function() {
+                  console.log('Users Email Address');
+                  console.log(usersEmail);
+                }
+              })
             }
           });
 
@@ -185,7 +199,7 @@ $(document).ready(function() {
                                         $.ajax({ url: '/users',
                                                  type: 'POST',
                                                  beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                                                 data: { facebook_id: usersFacebookID, name: usersName, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl, imdb_avg: imdbAvg, rt_avg: rottenTomatoesAvg, overall_avg: overallAvg },
+                                                 data: { facebook_id: usersFacebookID, name: usersName, email: usersEmail, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl, imdb_avg: imdbAvg, rt_avg: rottenTomatoesAvg, overall_avg: overallAvg },
                                                  success: function(response) {
                                                  },
                                                  complete: function() {

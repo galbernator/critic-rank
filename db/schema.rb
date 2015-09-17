@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150909024229) do
+ActiveRecord::Schema.define(version: 20150917193844) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -35,6 +35,7 @@ ActiveRecord::Schema.define(version: 20150909024229) do
     t.float    "imdb_avg"
     t.float    "rt_avg"
     t.float    "overall_avg"
+    t.string   "email"
   end
 
   add_foreign_key "friends", "users"
