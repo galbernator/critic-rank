@@ -1,6 +1,6 @@
-#body {
-  background-color: #cff0fa;
-}
+// #body {
+//   background-color: #cff0fa;
+// }
 
 .glyphicon.spinning {
     animation: spin 1s infinite linear;
@@ -97,11 +97,17 @@
 
 .description {
   // padding: 130px 135px;
-  max-width: 74%;
-  padding: 15px 90px 80px 60px;
+  max-width: 100%;
+  padding: 20px;
+  text-align: center;
 }
 
 .sub-title {
-  max-width: 68%;
-  font-family: 'Lilita One', cursive;
+  max-width: 100%;
+  font-size: 2em;
+}
+
+.page-title {
+  max-width: 100%;
+  font-size: 4.3em;
 }

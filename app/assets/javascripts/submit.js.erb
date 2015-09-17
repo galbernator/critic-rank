@@ -114,10 +114,6 @@ $(document).ready(function() {
                 dataType: 'json',
                 success: function(data) {
                   usersEmail = data.email;
-                },
-                complete: function() {
-                  console.log('Users Email Address');
-                  console.log(usersEmail);
                 }
               })
             }
