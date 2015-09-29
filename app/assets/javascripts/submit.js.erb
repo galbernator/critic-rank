@@ -74,224 +74,229 @@ $(document).ready(function() {
     }
   };
 
-
   $('#get-it').click(function() {
-    OAuth.popup('facebook', function(error, result) {
-      var fbAccessToken = result.access_token;
-      if (error) {
-        alert(error); // do something with error
-        return;
-      } else {
-        loadingResultsButton();
-        result.me().done(function (response) {
-          // save the user's profile picture, name and profile url and add to hidden form
-          usersFacebookPicture = response.avatar;
-          usersName = response.name;
-          usersFacebookProfileUrl = response.url
-          // Use the ID to get the movies
-          usersFacebookID = response.id;
-          var userFriends;
-          var userUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/movies?access_token=' +
-                         fbAccessToken
-          var userFriendsUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/friends?limit=5000&access_token=' +
-                         fbAccessToken
+  FB.login(function(response) {
+     // handle the response
+     fbAccessToken = response.authResponse.accessToken;
+     usersFacebookID = response.authResponse.userID
+     FB.api(usersFacebookID+'/?fields=name,email,picture,link', function(response) {
+       console.log(response);
+       usersName = response.name;
+       usersFacebookPicture = response.picture.data.url;
+       usersFacebookProfileUrl = response.link
+       usersEmail - response.email;
+       loadingResultsButton();
+         var userFriends;
+         var userUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/movies?access_token=' +
+                        fbAccessToken
+         var userFriendsUrl = 'https://graph.facebook.com/v2.3/' + usersFacebookID + '/friends?limit=5000&access_token=' +
+                        fbAccessToken
 
-          // get a  list user's friends to find their results later
-          $.ajax({
-            url: userFriendsUrl,
-            dataType: 'json',
-            success: function(data) {
-                      userFriends = data.data;
-            },
-            complete: function() {
-              for (var i = 0; i < userFriends.length; i += 1) {
-                usersFacebookFriends.push(userFriends[i].id);
-              };
-              // request current users email address to be saved
-              $.ajax({
-                url: 'https://graph.facebook.com/v2.3/' + usersFacebookID +
-                      '/?fields=email&access_token=' + fbAccessToken ,
-                dataType: 'json',
-                success: function(data) {
-                  usersEmail = data.email;
-                }
-              })
-            }
-          });
+         // get a  list user's friends to find their results later
+         $.ajax({
+           url: userFriendsUrl,
+           dataType: 'json',
+           success: function(data) {
+                     userFriends = data.data;
+           },
+           complete: function() {
+             for (var i = 0; i < userFriends.length; i += 1) {
+               usersFacebookFriends.push(userFriends[i].id);
+             };
+             // request current users email address to be saved
+             $.ajax({
+               url: 'https://graph.facebook.com/v2.3/' + usersFacebookID +
+                     '/?fields=email&access_token=' + fbAccessToken ,
+               dataType: 'json',
+               success: function(data) {
+                 usersEmail = data.email;
+               }
+             })
+           }
+         });
 
-          // get a user's liked movies
-          $.ajax({
-            url: userUrl,
-            dataType: 'json',
-            success: function(data) {
-                      likedMovies = data.data;
-                      numberOfLikedMovies = likedMovies.length;
-                    },
-            complete: function() {
-                          if (numberOfLikedMovies === 0){
-                            alert('You do not have any "Liked" movies. Please go Facebook and "Like" your favorite movies and then try again.');
-                            returnToOriginalButton();
-                          } else {
-                            // loop through each movie in the likedMovies list
-                            $.each(likedMovies, function(i, movie) {
-                              var movieID = movie.id;
-                              var movieTitle = movie.name;
-                              var releaseDate
-                              var movieUrl = 'https://graph.facebook.com/v2.3/' + movieID +
-                                             '?fields=release_date&access_token=' + fbAccessToken
-                              // send request to Facebook to get movie release year
-                              $.ajax({
-                                url: movieUrl,
-                                dataType: 'json',
-                                success: function(data) {
-                                  if (data.release_date != undefined) {
-                                    releaseDate = data.release_date.substring(data.release_date.length - 4);
-                                  }
-                                },
-                                complete: function(data) {
-                                  if (data.release_date != undefined) {
-                                    // with the release year, search the OMDB database to get ratings info
-                                    var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle + '&y=' +
-                                                          releaseDate + '&type=movie&tomatoes=true&plot=short&r=json'
-                                  } else {
-                                    var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle +
-                                                          '&type=movie&tomatoes=true&plot=short&r=json'
-                                  }
-                                  $.ajax({
-                                    url: movieSearchUrl,
-                                    dataType: 'json',
-                                    success: function(data) {
-                                      requestCounter += 1;
-                                      var imdbRating = data.imdbRating;
-                                      var rottenTomatoesRating = data.tomatoMeter;
-                                      if (isNaN(parseFloat(imdbRating)) === false) {
-                                        imdbRatingResultsArray.push(imdbRating);
-                                      }
-                                      if (isNaN(parseFloat(rottenTomatoesRating)) === false) {
-                                        rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
-                                      }
-                                      console.log(movieTitle + '(' + releaseDate + '): IMDB-' + imdbRating + ' RT-' + rottenTomatoesRating);
-                                    },
-                                    complete: function() {
-                                      // when all of the requests have completed, calculate averages, render results on page by calling renderResults, and save user
-                                      if (requestCounter === numberOfLikedMovies) {
-                                        imdbAvg = averageRating(imdbRatingResultsArray);
-                                        rottenTomatoesAvg = averageRating(rottenTomatoesRatingResultsArray);
-                                        overallAvg = overallAverage(imdbAvg, rottenTomatoesAvg);
+         // get a user's liked movies
+         $.ajax({
+           url: userUrl,
+           dataType: 'json',
+           success: function(data) {
+                     likedMovies = data.data;
+                     numberOfLikedMovies = likedMovies.length;
+                   },
+           complete: function() {
+                         if (numberOfLikedMovies === 0){
+                           alert('You do not have any "Liked" movies. Please go Facebook and "Like" your favorite movies and then try again.');
+                           returnToOriginalButton();
+                         } else {
+                           // loop through each movie in the likedMovies list
+                           $.each(likedMovies, function(i, movie) {
+                             var movieID = movie.id;
+                             var movieTitle = movie.name;
+                             var releaseDate
+                             var movieUrl = 'https://graph.facebook.com/v2.3/' + movieID +
+                                            '?fields=release_date&access_token=' + fbAccessToken
+                             // send request to Facebook to get movie release year
+                             $.ajax({
+                               url: movieUrl,
+                               dataType: 'json',
+                               success: function(data) {
+                                 if (data.release_date != undefined) {
+                                   releaseDate = data.release_date.substring(data.release_date.length - 4);
+                                 }
+                               },
+                               complete: function(data) {
+                                 if (data.release_date != undefined) {
+                                   // with the release year, search the OMDB database to get ratings info
+                                   var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle + '&y=' +
+                                                         releaseDate + '&type=movie&tomatoes=true&plot=short&r=json'
+                                 } else {
+                                   var movieSearchUrl = 'https://www.omdbapi.com/?t=' + movieTitle +
+                                                         '&type=movie&tomatoes=true&plot=short&r=json'
+                                 }
+                                 $.ajax({
+                                   url: movieSearchUrl,
+                                   dataType: 'json',
+                                   success: function(data) {
+                                     requestCounter += 1;
+                                     var imdbRating = data.imdbRating;
+                                     var rottenTomatoesRating = data.tomatoMeter;
+                                     if (isNaN(parseFloat(imdbRating)) === false) {
+                                       imdbRatingResultsArray.push(imdbRating);
+                                     }
+                                     if (isNaN(parseFloat(rottenTomatoesRating)) === false) {
+                                       rottenTomatoesRatingResultsArray.push(rottenTomatoesRating);
+                                     }
+                                     console.log(movieTitle + '(' + releaseDate + '): IMDB-' + imdbRating + ' RT-' + rottenTomatoesRating);
+                                   },
+                                   complete: function() {
+                                     // when all of the requests have completed, calculate averages, render results on page by calling renderResults, and save user
+                                     if (requestCounter === numberOfLikedMovies) {
+                                       imdbAvg = averageRating(imdbRatingResultsArray);
+                                       rottenTomatoesAvg = averageRating(rottenTomatoesRatingResultsArray);
+                                       overallAvg = overallAverage(imdbAvg, rottenTomatoesAvg);
 
 
-                                        // get all of the friends database to eventually by able to find all the current user's friends
-                                        $.ajax({
-                                          url: '/friends',
-                                          dataType: 'json',
-                                          success: function(data) {
-                                            allFriendsData = data;
-                                          },
-                                          complete: function() {
+                                       // get all of the friends database to eventually by able to find all the current user's friends
+                                       $.ajax({
+                                         url: '/friends',
+                                         dataType: 'json',
+                                         success: function(data) {
+                                           allFriendsData = data;
+                                         },
+                                         complete: function() {
 
-                                          }
-                                        })
-                                        // save users and rating results to the database
-                                        $.ajax({ url: '/users',
-                                                 type: 'POST',
-                                                 beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                                                 data: { facebook_id: usersFacebookID, name: usersName, email: usersEmail, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl, imdb_avg: imdbAvg, rt_avg: rottenTomatoesAvg, overall_avg: overallAvg },
-                                                 success: function(response) {
-                                                 },
-                                                 complete: function() {
-                                                   $.ajax({
-                                                      url: '/users',
-                                                      dataType: 'json',
-                                                      success: function(data) {
-                                                        // find the current user's id from all users
-                                                        for (var i = 0; i< data.length; i += 1) {
-                                                          if (usersFacebookID === data[i].facebook_id) {
-                                                            currentUserID = data[i].id;
-                                                            currentUserData = data[i];
-                                                            document.cookie="current_user=" + currentUserID;
-                                                          }
-                                                        }
-                                                      },
-                                                      complete: function(data) {
-                                                        allUserData = data.responseJSON;
-                                                        for (var i = 0; i < usersFacebookFriends.length; i += 1){
-                                                          var friend = usersFacebookFriends[i];
-                                                          for (var j = 0; j < allUserData.length; j += 1) {
-                                                            if (allUserData[j].facebook_id === friend) {
-                                                              userAndFriendsResultsArray.push({ name: allUserData[j].name, avatar: allUserData[j].facebook_picture, overall_average: allUserData[j].overall_avg, imdb_average: allUserData[j].imdb_avg, rt_average: allUserData[j].rt_avg });
-                                                            }
-                                                          }
-                                                        }
-                                                        // add the current user to the userAndFriendsResultsArray
-                                                        userAndFriendsResultsArray.push({ name: usersName, avatar: usersFacebookPicture, overall_average: overallAvg, imdb_average: imdbAvg, rt_average: rottenTomatoesAvg });
-                                                        userAndFriendsResultsArray = userAndFriendsResultsArray.sort(function(obj1, obj2) {
-                                                      // Ascending: first age less than the previous
-                                                       return obj2.overall_average - obj1.overall_average;
-                                                        });
+                                         }
+                                       })
+                                       // save users and rating results to the database
+                                       $.ajax({ url: '/users',
+                                                type: 'POST',
+                                                beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                                                data: { facebook_id: usersFacebookID, name: usersName, email: usersEmail, facebook_picture: usersFacebookPicture, facebook_url: usersFacebookProfileUrl, imdb_avg: imdbAvg, rt_avg: rottenTomatoesAvg, overall_avg: overallAvg },
+                                                success: function(response) {
+                                                },
+                                                complete: function() {
+                                                  $.ajax({
+                                                     url: '/users',
+                                                     dataType: 'json',
+                                                     success: function(data) {
+                                                       // find the current user's id from all users
+                                                       for (var i = 0; i< data.length; i += 1) {
+                                                         if (usersFacebookID === data[i].facebook_id) {
+                                                           currentUserID = data[i].id;
+                                                           currentUserData = data[i];
+                                                           document.cookie="current_user=" + currentUserID;
+                                                         }
+                                                       }
+                                                     },
+                                                     complete: function(data) {
+                                                       allUserData = data.responseJSON;
+                                                       for (var i = 0; i < usersFacebookFriends.length; i += 1){
+                                                         var friend = usersFacebookFriends[i];
+                                                         for (var j = 0; j < allUserData.length; j += 1) {
+                                                           if (allUserData[j].facebook_id === friend) {
+                                                             userAndFriendsResultsArray.push({ name: allUserData[j].name, avatar: allUserData[j].facebook_picture, overall_average: allUserData[j].overall_avg, imdb_average: allUserData[j].imdb_avg, rt_average: allUserData[j].rt_avg });
+                                                           }
+                                                         }
+                                                       }
+                                                       // add the current user to the userAndFriendsResultsArray
+                                                       userAndFriendsResultsArray.push({ name: usersName, avatar: usersFacebookPicture, overall_average: overallAvg, imdb_average: imdbAvg, rt_average: rottenTomatoesAvg });
+                                                       userAndFriendsResultsArray = userAndFriendsResultsArray.sort(function(obj1, obj2) {
+                                                     // Ascending: first age less than the previous
+                                                      return obj2.overall_average - obj1.overall_average;
+                                                       });
 
 
-                                                        // loop throguh the array and assign the friend's rank
-                                                        for (var i = 0; i < userAndFriendsResultsArray.length; i += 1) {
-                                                          var rank;
-                                                          if (userAndFriendsResultsArray.length === 1) {
-                                                            rank = '<div class="share">Share to see your rank!</div>'
-                                                          } else if (i > 1 && userAndFriendsResultsArray[i].overall_average === userAndFriendsResultsArray[i-1].overall_average) {
-                                                            // in case there are 3 in a row that are tied (thinking that the probability of more than 3 people being tied is an extreme edge case)
-                                                            if (i > 2 && userAndFriendsResultsArray[i-1].overall_average === userAndFriendsResultsArray[i-2].overall_average) {
-                                                              rank = i - 1;
-                                                            } else {
-                                                              rank = i
-                                                            }
-                                                          } else {
-                                                            rank = i + 1;
-                                                          }
-                                                          renderResults(userAndFriendsResultsArray[i], rank );
-                                                          // find a way to make sure that the addition to the list is unique
-                                                        }
-                                                        changeButton();
+                                                       // loop throguh the array and assign the friend's rank
+                                                       for (var i = 0; i < userAndFriendsResultsArray.length; i += 1) {
+                                                         var rank;
+                                                         if (userAndFriendsResultsArray.length === 1) {
+                                                           rank = '<div class="share">Share to see your rank!</div>'
+                                                         } else if (i > 1 && userAndFriendsResultsArray[i].overall_average === userAndFriendsResultsArray[i-1].overall_average) {
+                                                           // in case there are 3 in a row that are tied (thinking that the probability of more than 3 people being tied is an extreme edge case)
+                                                           if (i > 2 && userAndFriendsResultsArray[i-1].overall_average === userAndFriendsResultsArray[i-2].overall_average) {
+                                                             rank = i - 1;
+                                                           } else {
+                                                             rank = i
+                                                           }
+                                                         } else {
+                                                           rank = i + 1;
+                                                         }
+                                                         renderResults(userAndFriendsResultsArray[i], rank );
+                                                         // find a way to make sure that the addition to the list is unique
+                                                       }
+                                                       changeButton();
 
-                                                        // set the meta data for Facebook Graph sharing markup
-                                                        $('meta[property="og:title"]').prop('content','My Critic Rank is ' + currentUserData.overall_avg + ' out of 10. Can you beat me?');
-                                                        $('meta[property="og:critic_rating"]').prop('content',overallAvg);
+                                                       // set the meta data for Facebook Graph sharing markup
+                                                       $('meta[property="og:title"]').prop('content','My Critic Rank is ' + currentUserData.overall_avg + ' out of 10. Can you beat me?');
+                                                       $('meta[property="og:critic_rating"]').prop('content',overallAvg);
 
-                                                        // save the current user's friends to the Friends table
-                                                        $.each(userFriends, function(i, friend) {
-                                                          $.ajax({
-                                                            url: '/friends',
-                                                            type: 'POST',
-                                                            beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-                                                            data: { facebook_id: friend.id, user_id: currentUserID },
-                                                            success: function() {
-                                                              // get information for each friend and save the variables to render them
-                                                            },
-                                                            complete: function() {
+                                                       // save the current user's friends to the Friends table
+                                                       $.each(userFriends, function(i, friend) {
+                                                         $.ajax({
+                                                           url: '/friends',
+                                                           type: 'POST',
+                                                           beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+                                                           data: { facebook_id: friend.id, user_id: currentUserID },
+                                                           success: function() {
+                                                             // get information for each friend and save the variables to render them
+                                                           },
+                                                           complete: function() {
 
-                                                            }
-                                                          })
-                                                        })
+                                                           }
+                                                         })
+                                                       })
 
-                                                      }
-                                                    })
-                                                  }
-                                            })
-                                            .fail(function(error){
-                                            });
-                                      }
-                                    }
-                                  })
-                                }
-                              })
-                            })
-                          };
-                      }
-            });
-        })
-        .fail(function (err) {
-            //handle error with err
-        });
-      }
-    });
-  });
+                                                     }
+                                                   })
+                                                 }
+                                           })
+                                           .fail(function(error){
+                                           });
+                                     }
+                                   }
+                                 })
+                               }
+                             })
+                           })
+                         };
+                     }
+           });
+     })
+   }, {scope: 'public_profile, email, publish_actions, user_friends, user_likes'});
+
+})
+
+
+  // $('#get-it').click(function() {
+  //   OAuth.popup('facebook', function(error, result) {
+  //     var fbAccessToken = result.access_token;
+  //     if (error) {
+  //       alert(error); // do something with error
+  //       return;
+  //     } else {
+  //     }
+  //   });
+  // });
 
   $(document).on('click', '#share-it', function() {
 
